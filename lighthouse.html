@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lighthouse Analyzer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #4CAF50;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 10px;
+      font-size: 16px;
+      color: #fff;
+      background-color: #4CAF50;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .output {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #eef;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    /* Loader animation */
+    .loader {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 24px;
+      color: #4CAF50;
+    }
+
+    .dot {
+      animation: dot-blink 1.5s infinite;
+      margin: 0 5px;
+    }
+
+    .dot:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.3s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.6s;
+    }
+
+    @keyframes dot-blink {
+      0% {
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Analizador Lighthouse</h1>
+    <form id="analyze-form">
+      <input type="url" id="url-input" placeholder="Ingrese la url a analizar" required>
+      <button type="submit">Analizar</button>
+    </form>
+    
+    <!-- Loader animation -->
+    <div class="loader" id="loader" style="display: none;">
+      <span class="dot">.</span>
+      <span class="dot">.</span>
+      <span class="dot">.</span>
+    </div>
+
+    <div class="output" id="output" style="display: none;">
+      <h3>Resultados:</h3>
+      <pre id="results"></pre>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("analyze-form");
+    const urlInput = document.getElementById("url-input");
+    const outputDiv = document.getElementById("output");
+    const resultsPre = document.getElementById("results");
+    const loader = document.getElementById("loader");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const url = urlInput.value;
+
+      // Mostrar mensaje de carga
+      resultsPre.textContent = "Analizando... Porfavor espera!";
+      outputDiv.style.display = "block";
+      loader.style.display = "flex"; // Mostrar el loader con los puntos animados
+
+      try {
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        const raw = JSON.stringify({
+          url: url,
+        });
+
+        const requestOptions = {
+          method: "POST",
+          headers: myHeaders,
+          body: raw,
+          redirect: "follow",
+        };
+
+        const response = await fetch("http://192.168.1.16:65000/analyze", requestOptions);
+
+        if (!response.ok) {
+          throw new Error('Error analyzing the URL');
+        }
+
+        const result = await response.json(); // Obtener los resultados como JSON
+
+        // Mostrar los resultados
+        resultsPre.textContent = JSON.stringify(result, null, 2);
+        outputDiv.style.display = "block"; // Mostrar la sección de resultados
+      } catch (error) {
+        console.error(error);
+        resultsPre.textContent = "An error occurred: " + error.message;
+        outputDiv.style.display = "block"; // Mostrar el mensaje de error
+      } finally {
+        // Ocultar el loader después de procesar la respuesta
+        loader.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
